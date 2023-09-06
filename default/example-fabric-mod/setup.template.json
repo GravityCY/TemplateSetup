@@ -1,0 +1,56 @@
+{
+  "keys": {
+    "mod_id": {
+      "file": [
+        "src/main/resources/@{mod_id}.mixins.json",
+        "src/main/resources/assets/@{mod_id}",
+        "src/main/resources/data/@{mod_id}"
+      ],
+      "content": [
+        "src/main/java/@{mod_class_name}.java",
+        "src/main/resources/fabric.mod.json",
+        "gradle.properties"
+      ]
+    },
+    "mod_name": {
+      "content": [
+        "gradle.properties"
+      ]
+    },
+    "mod_version": {
+      "content": [
+        "gradle.properties"
+      ]
+    },
+    "mod_description": {
+      "content": [
+        "gradle.properties"
+      ]
+    },
+    "mod_author": {
+      "content": [
+        "gradle.properties"
+      ]
+    },
+    "mod_package_name": {
+      "file": [
+        "src/main/resources/me/gravityio/@{mod_package_name}"
+      ],
+      "content": [
+        "src/main/java/me/gravityio/@{mod_package_name}/@{mod_class_name}.java",
+        "src/main/java/me/gravityio/@{mod_package_name}/mixins/impl/ExampleMixin.java",
+        "src/main/resources/@{mod_id}.mixins.json",
+        "src/main/resources/fabric.mod.json"
+      ]
+    },
+    "mod_class_name": {
+      "file": [
+        "src/main/java/me/gravityio/@{mod_package_name}/@{mod_class_name}.java"
+      ],
+      "content": [
+        "src/main/java/me/gravityio/@{mod_package_name}/@{mod_class_name}.java",
+        "src/main/resources/fabric.mod.json"
+      ]
+    }
+  }
+}
