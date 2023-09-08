@@ -12,7 +12,7 @@
     "issues": "${mod_sources}"
   },
   "license": "${mod_license}",
-  "icon": "assets/example/icon.png",
+  "icon": "assets/@{mod_id}/icon.png",
 
   "environment": "*",
   "entrypoints": {

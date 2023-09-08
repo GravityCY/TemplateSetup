@@ -1,164 +1,118 @@
-# Get program args
-import json
 import os
-from pathlib import Path
+import shutil
 import re
 
-project_path: Path
-resources_path: Path
-java_path: Path
-mod_id: str
-mod_class_name: str
-mod_package_name: str
-mod_name: str
-mod_version: str
-mod_description: str
-mod_author: str
-new_package_qualifier: str
+from api.Template import Template
+from pathlib import Path
+import globals
+
+templates = {}
+current_template: Template
+cwd_path = Path(os.getcwd())
+templates_path = Path(cwd_path.joinpath("templates"))
+output_path = Path("test")
+isDev = False
+cache = {}
 
 
-def rename_file(path: Path, old_name: str, new_name: str):
-    try:
-        os.rename(path.joinpath(old_name), path.joinpath(new_name))
-        return True
-    except FileNotFoundError:
-        return False
+def debug(message, *args, **kwargs):
+    if not isDev:
+        return
+    print(message, *args, **kwargs)
 
 
-def replace_file_contents(file_path: Path, search_string: str, new_string):
-    file_contents: str
-    with open(file_path, "r") as file:
-        file_contents = file.read()
-    file_contents = re.sub(search_string, new_string, file_contents)
-    with open(file_path, "w") as file:
-        file.write(file_contents)
+def load_templates():
+    for path in os.listdir(templates_path):
+        template_path = Path(templates_path.joinpath(path))
+        if not template_path.joinpath("setup.template.json").is_file():
+            continue
+        debug(f"Adding template of name {template_path.name} at path {template_path}")
+        templates[template_path.name] = template_path
 
 
-def replace_json(path: Path, key: str, value: str):
-    data: json
+def get_templates_as_list():
+    out: list[Template] = list()
+    for name, path in templates.items():
+        temp = Template(name, path)
+        out.append(temp)
+    return out
+
+
+def replace_file_content(path: Path, search: str, replacement: str):
     with open(path, "r") as file:
-        data = json.load(file)
-
-    data[key] = value
-
-    with open(path, "w") as json_file:
-        json.dump(data, json_file, indent=4)
-
-
-def replace_json_all(path: Path, key_values: dict):
-    data = from_json_file(path)
-    for key, value in key_values.items():
-        data[key] = value
-    write_json_file(path, data)
-
-
-def from_json_file(path: Path):
-    with open(path, "r") as json_file:
-        return json.load(json_file)
-
-
-def write_json_file(path: Path, data):
+        data = file.read()
+    data = re.sub(search, replacement, data)
     with open(path, "w") as file:
-        json.dump(data, file, indent=4)
+        file.write(data)
+
+
+# Rename a part of the name of a file
+def rename_file(path: Path, search: str, replacement: str):
+    try:
+        directory = path.parent
+        new_file_name = re.sub(search, replacement, path.name)
+        new_file_path = directory.joinpath(new_file_name)
+        os.rename(path, new_file_path)
+        return new_file_name
+    except FileNotFoundError:
+        return None
+
+
+def replace_content(template: Template, out_path: Path):
+    for key, paths in template.collect_content().items():
+        for path_string in paths:
+            path = out_path.joinpath(path_string)
+            search = globals.DEFAULT_FORMAT % key
+            replacement = template.get_replacement(key)
+            replace_file_content(path, search, replacement)
+
+
+def get_renamed_path(path: Path):
+    out: str = ""
+
+    for parent in path.parents:
+        if parent.name in cache:
+            return cache[parent.name]
+        else:
+            cache[parent.name] = parent
+
+    return out
+
+
+def replace_files(template: Template, out_path: Path):
+    pass
+    for replacement in template.collect_files():
+        path = out_path.joinpath(replacement.path)
+        search = globals.DEFAULT_FORMAT % replacement.key
+        replacement = template.get_replacement(replacement.key)
+        rename_file(path, search, replacement)
+
+
+def ignore_setup_template(directory: str, filenames: list[str]):
+    directory_path = Path(directory)
+    return ["setup.template.json"] if current_template.path == directory_path else []
 
 
 def main():
-    global project_path, mod_id, mod_name, \
-        mod_version, mod_description, mod_author, \
-        mod_package_name, mod_class_name, resources_path, \
-        java_path, new_package_qualifier
+    global current_template, output_path
 
-    project_path = Path(input("Enter Project Path: "))
-    mod_id = input("Enter Mod ID: ")
-    mod_class_name = input("Enter Mod Class Name: ")
-    mod_package_name = input("Enter Mod Package Name: ")
-    mod_name = input("Enter Mod Name: ")
-    mod_version = input("Enter Mod Version: ")
-    mod_description = input("Enter Mod Description: ")
-    mod_author = input("Enter Mod Author: ")
+    load_templates()
+    print("Available Templates: ")
+    templates_list = get_templates_as_list()
+    for index, template in enumerate(templates_list):
+        print(f" [{index}] {template.name}: {template.path}")
+    template_index = int(input("Choose a Template: "))
+    print(f"Selected: ({templates_list[template_index]})")
+    output_path = Path(input("Enter output path: ")).resolve()
+    current_template = templates_list[template_index]
+    current_template.load()
+    shutil.copytree(current_template.path, output_path, ignore=ignore_setup_template)
+    print(f"Copied {current_template.name} from {current_template.path} to {output_path}")
+    for key in current_template.collect_keys():
+        current_template.set_replacement(key, input(f"Enter {key}: "))
 
-    if mod_id == "":
-        mod_id = "example"
-    if mod_package_name == "":
-        mod_package_name = "example"
-    if mod_name == "":
-        mod_name = "Example"
-    if mod_version == "":
-        mod_version = "0.1.0+1.19.4"
-    if mod_description == "":
-        mod_description = "Example Mod"
-    if mod_author == "":
-        mod_author = "GravityIO"
-
-    resources_path = project_path.joinpath("src/main/resources")
-    java_path = project_path.joinpath("src/main/java")
-    new_package_qualifier = f"me.gravityio.{mod_package_name}"
-
-    format_gradle_properties()
-    format_src()
-    format_res()
-
-
-def format_res():
-    format_fabric_json()
-    format_mixins_json()
-    rename_file(resources_path.joinpath("assets"), "example", mod_id)
-
-
-def format_mixins_json():
-    mixins_json_path = resources_path.joinpath("example.mixins.json")
-    mixins_json = from_json_file(mixins_json_path)
-    mixins_json["package"] = f"{new_package_qualifier}.mixins.impl"
-    write_json_file(mixins_json_path, mixins_json)
-
-    rename_file(resources_path, "example.mixins.json", f"{mod_id}.mixins.json")
-
-
-def format_fabric_json():
-    fabric_mod_path = resources_path.joinpath("fabric.mod.json")
-    fabric_json = from_json_file(fabric_mod_path)
-    fabric_json["entrypoints"]["main"] = [f"me.gravityio.{mod_package_name}.{mod_class_name}"]
-    fabric_json["mixins"] = [f"{mod_id}.mixins.json"]
-    write_json_file(fabric_mod_path, fabric_json)
-
-
-def format_src():
-    package_path = java_path.joinpath("me/gravityio/example")
-    main_class_path = package_path.joinpath("ExampleMod.java")
-    mixin_class_path = package_path.joinpath(f"mixins/impl/ExampleMixin.java")
-
-    replace_file_contents(main_class_path, r"package me\.gravityio\..+;", f"package me.gravityio.{mod_package_name};")
-    replace_file_contents(main_class_path, r"public class \w+", f"public class {mod_class_name}")
-    replace_file_contents(main_class_path, r"MOD_ID = .+", f"MOD_ID = \"{mod_id}\";")
-    replace_file_contents(mixin_class_path, r"package me\.gravityio\..+;",
-                          f"package me.gravityio.{mod_package_name}.mixins.impl;")
-
-    rename_file(package_path, "ExampleMod.java", f"{mod_class_name}.java")
-    rename_file(java_path.joinpath("me/gravityio"), "example", mod_package_name)
-
-
-def format_gradle_properties():
-    path = project_path.joinpath("gradle.properties")
-    mod_id_search = r"mod_id = .+"
-    mod_id_replacement = f"mod_id = {mod_id}"
-
-    mod_name_search = r"mod_name = .+"
-    mod_name_replacement = f"mod_name = {mod_name}"
-
-    mod_version_search = r"mod_version = .+"
-    mod_version_replacement = f"mod_version = {mod_version}"
-
-    mod_description_search = r"mod_description = .+"
-    mod_description_replacement = f"mod_description = {mod_description}"
-
-    mod_author_search = r"mod_author = .+"
-    mod_author_replacement = f"mod_author = {mod_author}"
-
-    replace_file_contents(path, mod_id_search, mod_id_replacement)
-    replace_file_contents(path, mod_name_search, mod_name_replacement)
-    replace_file_contents(path, mod_version_search, mod_version_replacement)
-    replace_file_contents(path, mod_description_search, mod_description_replacement)
-    replace_file_contents(path, mod_author_search, mod_author_replacement)
+    replace_content(current_template, output_path)
+    replace_files(current_template, output_path)
 
 
 main()

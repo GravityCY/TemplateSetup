@@ -7,7 +7,7 @@
         "src/main/resources/data/@{mod_id}"
       ],
       "content": [
-        "src/main/java/@{mod_class_name}.java",
+        "src/main/java/me/gravityio/@{mod_package_name}/@{mod_class_name}.java",
         "src/main/resources/fabric.mod.json",
         "gradle.properties"
       ]
@@ -34,7 +34,7 @@
     },
     "mod_package_name": {
       "file": [
-        "src/main/resources/me/gravityio/@{mod_package_name}"
+        "src/main/java/me/gravityio/@{mod_package_name}"
       ],
       "content": [
         "src/main/java/me/gravityio/@{mod_package_name}/@{mod_class_name}.java",
