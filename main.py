@@ -114,5 +114,8 @@ def main():
     replace_content(current_template, output_path)
     replace_files(current_template, output_path)
 
+    if current_template.has_open_event():
+        current_template.run_open_event(output_path)
+
 
 main()

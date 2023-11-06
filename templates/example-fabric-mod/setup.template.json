@@ -14,7 +14,8 @@
     },
     "mod_name": {
       "content": [
-        "gradle.properties"
+        "gradle.properties",
+        "README.md"
       ]
     },
     "mod_version": {
@@ -24,7 +25,8 @@
     },
     "mod_description": {
       "content": [
-        "gradle.properties"
+        "gradle.properties",
+        "README.md"
       ]
     },
     "mod_author": {
@@ -52,5 +54,8 @@
         "src/main/resources/fabric.mod.json"
       ]
     }
+  },
+  "on_open": {
+    "run_console": "idea ${out_folder}"
   }
 }
