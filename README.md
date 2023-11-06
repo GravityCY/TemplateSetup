@@ -65,3 +65,20 @@ in example.md with whatever the user enters
 0: [Enter "content": 'Some Cool Name']
 1: [Replace all '@{name}' in 'readme.md' -> 'Some Cool Name']
 ```
+
+---
+
+Optionally you can put a `on_open` key in in the root of the `setup.template.json`;
+```json
+{
+  "keys": ...,
+  "on_open": {
+    "run_console": "echo ${out_folder}"
+  }
+}
+```
+Right now the only available action to take `on_open` is
+to run something in the console, can take 1 variable 
+currently which is hardcoded;
+
+* `out_folder` would become `"./some_folder/that_user_specified"` (adds quotation marks)

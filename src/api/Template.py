@@ -16,7 +16,8 @@ class Template:
         with open(self.path.joinpath("setup.template.json"), "r") as file:
             data = json.load(file)
             self.keys = data["keys"]  # type: dict[str, dict]
-            self.on_open = data["on_open"]
+            if "on_open" in data:
+                self.on_open = data["on_open"]
 
     def has_open_event(self):
         return self.on_open is not None
@@ -35,6 +36,9 @@ class Template:
     def collect_content(self):
         temp: dict[str, list[str]] = {}
         for key, value in self.keys.items():
+            if "content" not in value:
+                continue
+
             temp[key] = value["content"]
         return temp
 
