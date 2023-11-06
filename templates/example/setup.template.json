@@ -1,0 +1,17 @@
+{
+  "keys": {
+    "name": {
+      "file": [
+        "@{filename}.json"
+      ],
+      "content": [
+        "example.md"
+      ]
+    },
+    "filename": {
+      "file": [
+        "@{filename}.json"
+      ]
+    }
+  }
+}

@@ -1,2 +1,2 @@
-templates/
-!templates/example
+templates/*
+!templates/example/
