@@ -67,18 +67,6 @@ def replace_content(template: Template, out_path: Path):
             replace_file_content(path, search, replacement)
 
 
-def get_renamed_path(path: Path):
-    out: str = ""
-
-    for parent in path.parents:
-        if parent.name in cache:
-            return cache[parent.name]
-        else:
-            cache[parent.name] = parent
-
-    return out
-
-
 def replace_files(template: Template, out_path: Path):
     pass
     for replacement in template.collect_files():
